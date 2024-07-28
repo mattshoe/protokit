@@ -1,0 +1,15 @@
+syntax = "proto3";
+package {{packageName}};
+
+message {{messageName}} {
+{{#fields}}
+    {{type}} {{name}} = {{number}};
+{{/fields}}
+{{#nestedMessages}}
+    message {{messageName}} {
+    {{#fields}}
+        {{type}} {{name}} = {{number}};
+    {{/fields}}
+    }
+{{/nestedMessages}}
+}

@@ -1,21 +1,11 @@
 plugins {
     kotlin("jvm")
-}
-
-group = "org.mattshoe.shoebox"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+    alias(libs.plugins.ksp)
 }
 
 dependencies {
+    ksp(project(":ProtoKit.Processor"))
+    compileOnly(project(":ProtoKit.Annotations"))
+    implementation(project(":ProtoKit.Runtime"))
     testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(11)
 }

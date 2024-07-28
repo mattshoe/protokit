@@ -1,21 +1,14 @@
 plugins {
     kotlin("jvm")
+    id("maven-publish")
+    signing
 }
 
-group = "org.mattshoe.shoebox"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+ext {
+    set("ARTIFACT_ID", "ProtoKit.Runtime")
+    set("PUBLICATION_NAME", "protokitRuntime")
 }
 
 dependencies {
     testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(11)
 }

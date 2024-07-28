@@ -1,21 +1,17 @@
 plugins {
     kotlin("jvm")
+    id("maven-publish")
+    signing
 }
 
-group = "org.mattshoe.shoebox"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+ext {
+    set("ARTIFACT_ID", "ProtoKit.Processor")
+    set("PUBLICATION_NAME", "protokitProcessor")
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-kotlin {
-    jvmToolchain(11)
+    implementation(libs.ksp.api)
+    implementation(libs.mustache)
+    implementation(libs.stratify)
+    implementation(project(":ProtoKit.Annotations"))
 }

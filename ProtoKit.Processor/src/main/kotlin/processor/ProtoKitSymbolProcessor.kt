@@ -10,13 +10,14 @@ import io.github.mattshoe.shoebox.stratify.strategy.AnnotationStrategy
 import io.github.mattshoe.shoebox.stratify.strategy.Strategy
 import org.mattshoe.shoebox.annotations.ProtoMessage
 import java.io.StringWriter
+import kotlin.math.log
 
 class ProtoKitSymbolProcessor: StratifySymbolProcessor() {
     override suspend fun buildStrategies(resolver: StratifyResolver): List<Strategy<KSNode, out KSNode>> {
         return listOf(
             AnnotationStrategy(
                 ProtoMessage::class,
-                ProtoMessageProcessor(resolver)
+                ProtoMessageProcessor(resolver, logger)
             )
         )
     }

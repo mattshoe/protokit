@@ -10,6 +10,7 @@ ext {
 }
 
 dependencies {
+    implementation(libs.kotlinx.coroutines)
     implementation(libs.ksp.api)
     implementation(libs.mustache)
     implementation(libs.stratify)

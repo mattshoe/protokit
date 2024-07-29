@@ -4,7 +4,7 @@ kotlinxCoroutines = "1.9.0-RC"
 junit = "4.13.2"
 kotlinPoet = "1.18.1"
 truth = "1.4.2"
-stratify = "1.1.0-beta16"
+stratify = "1.1.0-beta1000"
 mustache = "0.9.10"
 
 [libraries]

@@ -1,17 +1,22 @@
 package org.mattshoe.shoebox.processor
 
 import com.github.mustachejava.DefaultMustacheFactory
+import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import io.github.mattshoe.shoebox.stratify.ksp.StratifyResolver
 import io.github.mattshoe.shoebox.stratify.model.GeneratedFile
 import io.github.mattshoe.shoebox.stratify.processor.Processor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import org.mattshoe.shoebox.annotations.Scalar
 import java.io.StringWriter
-import kotlin.reflect.KClass
 
 class ProtoMessageProcessor(
-    private val resolver: StratifyResolver
+    private val resolver: StratifyResolver,
+    private val logger: KSPLogger
 ): Processor<KSClassDeclaration> {
     override val targetClass = KSClassDeclaration::class
     val scalarMap: Map<String, Scalar> = mapOf(
@@ -25,9 +30,10 @@ class ProtoMessageProcessor(
         "kotlin.Short" to Scalar.INT32,  // Kotlin's Short mapped to int32
         "kotlin.Byte" to Scalar.INT32     // Maps Kotlin's Byte to int32 in protobuf
     )
+    private val numberMutex = Mutex()
 
     override suspend fun process(node: KSClassDeclaration): Set<GeneratedFile> {
-        val packageName = "${node.packageName.asString()}.protokit"
+        val packageName = "protokit.${node.packageName.asString()}"
         val className = node.simpleName.asString()
 
         return setOf(
@@ -38,22 +44,23 @@ class ProtoMessageProcessor(
                     node,
                     packageName,
                     className
-                )
+                ),
+                extension = "proto"
             )
         )
     }
 
-    private fun generateProtoFile(
+    private suspend fun generateProtoFile(
         ksClass: KSClassDeclaration,
         packageName: String,
         className: String
     ): String {
-        val fields = ksClass.getAllProperties().map { property ->
+        val fields = ksClass.getAllProperties().toList().map { property ->
             val name = property.simpleName.asString()
-            val type = determineScalar(property) // Your logic to map KSPropertyDeclaration to proto type
-            val number = extractFieldNumber(property) // Your logic to get field number
+            val type = determineScalar(property)
+            val number = extractFieldNumber(property)
             mapOf("name" to name, "type" to type, "number" to number)
-        }
+        }.toList()
 
         val templateData = mapOf(
             "packageName" to packageName,
@@ -61,9 +68,13 @@ class ProtoMessageProcessor(
             "fields" to fields
         )
 
+        logger.warn("Template Data: ${templateData.keys.joinToString { "$it: ${templateData[it]}" }}")
+
         val mustache = DefaultMustacheFactory().compile("protoTemplate.mustache")
         val writer = StringWriter()
-        mustache.execute(writer, templateData).flush()
+        withContext(Dispatchers.IO) {
+            mustache.execute(writer, templateData).flush()
+        }
 
         return writer.toString()
     }
@@ -73,8 +84,11 @@ class ProtoMessageProcessor(
         return scalarMap[kotlinType]?.value ?: "string" // Default to string if not found
     }
 
-    private fun extractFieldNumber(property: KSPropertyDeclaration): Int {
+    private var lineNumber = 1
+    private suspend fun extractFieldNumber(property: KSPropertyDeclaration): Int {
         // Implement your logic to extract the field number, possibly from annotations
-        return 1 // Example placeholder
+        return numberMutex.withLock {
+            lineNumber++
+        }
     }
 }
